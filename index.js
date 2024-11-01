@@ -1,6 +1,9 @@
 const http = require("http");
 const connectDB = require("./db");
 
+const signupHandler = require("./routes/signup");
+const loginHandler = require("./routes/login");
+
 const port = process.env.PORT || 3000;
 
 const startServer = async () => {
@@ -8,13 +11,10 @@ const startServer = async () => {
     const dbConnection = await connectDB();
 
     const requestHandler = (req, res) => {
-      if (req.method === "POST" && req.url === "/api/v1/signup") {
-        res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("signup page");
-      } else if (req.method === "POST" && req.url === "/api/v1/login") {
-        res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end("login page");
-      } else {
+      signupHandler(req, res, dbConnection);
+      loginHandler(req, res);
+
+      if (res.writableEnded === false) {
         res.writeHead(404, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ message: "Route not found." }));
       }
