@@ -11,6 +11,10 @@ const startServer = async () => {
     const dbConnection = await connectDB();
 
     const requestHandler = (req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
       if (req.method === "POST" && req.url === "/api/v1/signup") {
         signupHandler(req, res, dbConnection);
       } else if (req.method === "POST" && req.url === "/api/v1/login") {
