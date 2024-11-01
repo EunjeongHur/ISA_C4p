@@ -28,7 +28,7 @@ const loginHandler = async (req, res, dbConnection) => {
           return res.end(JSON.stringify({ message: "Invalid email format" }));
         }
 
-        // Step 2: Check if user exists in the database
+        // Step 2: Check if user exists in the database and retrieve user_type
         const selectQuery = "SELECT * FROM user WHERE email = ?";
         const [user] = await dbConnection.execute(selectQuery, [email]);
 
@@ -41,6 +41,8 @@ const loginHandler = async (req, res, dbConnection) => {
 
         const dbUser = user[0]; // Assuming user exists and is the first item
         const storedHashedPassword = dbUser.hashed_password;
+        const userType = dbUser.user_type_id; // Retrieve user_type from the database
+        const role = userType === 1 ? "admin" : "user"; // Map user_type to role
         const salt = process.env.SALT_ROUNDS; // Assuming you’re using a static salt
         const hashedPassword = hashPassword(password, salt);
 
@@ -52,9 +54,9 @@ const loginHandler = async (req, res, dbConnection) => {
           );
         }
 
-        // Step 4: Generate JWT token
+        // Step 4: Generate JWT token with role included
         const jwtSecret = process.env.JWT_SECRET || "default_secret_key";
-        const token = jwt.sign({ email }, jwtSecret, { expiresIn: "1h" });
+        const token = jwt.sign({ email, role }, jwtSecret, { expiresIn: "1h" });
 
         // Step 5: Send success response with token
         res.writeHead(200, { "Content-Type": "application/json" });

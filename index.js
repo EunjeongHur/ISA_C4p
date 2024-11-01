@@ -3,6 +3,10 @@ const connectDB = require("./db");
 
 const signupHandler = require("./routes/signup");
 const loginHandler = require("./routes/login");
+const verifyTokenHandler = require("./routes/verifyToken");
+const requestCountHandler = require("./routes/requestCount");
+const getUsersHandler = require("./routes/getUsers");
+const checkRoleHandler = require("./routes/checkRole");
 
 const port = process.env.PORT || 3000;
 
@@ -28,6 +32,17 @@ const startServer = async () => {
         signupHandler(req, res, dbConnection);
       } else if (req.method === "POST" && req.url === "/api/v1/login") {
         loginHandler(req, res, dbConnection);
+      } else if (req.method === "GET" && req.url === "/api/v1/verify-token") {
+        verifyTokenHandler(req, res);
+      } else if (
+        (req.method === "GET" && req.url === "/api/v1/request-count") ||
+        (req.method === "POST" && req.url === "/api/v1/increment-request-count")
+      ) {
+        requestCountHandler(req, res, dbConnection);
+      } else if (req.method === "GET" && req.url === "/api/v1/users") {
+        getUsersHandler(req, res, dbConnection);
+      } else if (req.method === "GET" && req.url === "/api/v1/check-role") {
+        checkRoleHandler(req, res);
       } else {
         if (!res.writableEnded) {
           res.writeHead(404, { "Content-Type": "application/json" });
