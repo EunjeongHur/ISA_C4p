@@ -18,24 +18,18 @@ const signupHandler = async (req, res, dbConnection) => {
         const jwtSecret = process.env.JWT_SECRET || "default_secret_key";
         const token = jwt.sign({ email }, jwtSecret, { expiresIn: "1h" });
 
-        if (!res.headersSent) {
-          res.writeHead(201, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ message: "Signup successful", token }));
-        }
+        res.writeHead(201, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ message: "Signup successful", token }));
       } catch (error) {
         console.error("Signup error:", error);
 
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ message: "Error during signup", error: error.message }));
-        }
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ message: "Error during signup", error: error.message }));
       }
     });
   } else {
-    if (!res.headersSent) {
-      res.writeHead(404, { "Content-Type": "text/plain" });
-      res.end("Not Found");
-    }
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    res.end("Not Found");
   }
 };
 
