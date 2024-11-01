@@ -1,4 +1,16 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+const hashPassword = (password) => {
+  const salt = process.env.SALT_ROUNDS;
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512');
+  return hash.toString('hex');
+};
 
 const signupHandler = async (req, res, dbConnection) => {
   if (req.method === "POST" && req.url === "/api/v1/signup") {
@@ -12,8 +24,16 @@ const signupHandler = async (req, res, dbConnection) => {
       try {
         const { email, password } = JSON.parse(body);
 
+        if (!validateEmail(email)) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ message: "Invalid email" }));
+          return;
+        }
+
+        const hashedPassword = hashPassword(password);
+
         const insertQuery = "INSERT INTO user (email, hashed_password) VALUES (?, ?)";
-        await dbConnection.execute(insertQuery, [email, password]);
+        await dbConnection.execute(insertQuery, [email, hashedPassword]);
 
         const jwtSecret = process.env.JWT_SECRET || "default_secret_key";
         const token = jwt.sign({ email }, jwtSecret, { expiresIn: "1h" });
