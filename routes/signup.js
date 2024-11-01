@@ -4,19 +4,19 @@ const crypto = require("crypto");
 const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-}
+};
 
 const hashPassword = (password) => {
   const salt = process.env.SALT_ROUNDS;
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512');
-  return hash.toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512");
+  return hash.toString("hex");
 };
 
 const signupHandler = async (req, res, dbConnection) => {
   if (req.method === "POST" && req.url === "/api/v1/signup") {
     let body = "";
 
-    req.on("data", chunk => {
+    req.on("data", (chunk) => {
       body += chunk.toString();
     });
 
@@ -32,7 +32,8 @@ const signupHandler = async (req, res, dbConnection) => {
 
         const hashedPassword = hashPassword(password);
 
-        const insertQuery = "INSERT INTO user (email, hashed_password) VALUES (?, ?)";
+        const insertQuery =
+          "INSERT INTO user (email, hashed_password) VALUES (?, ?)";
         await dbConnection.execute(insertQuery, [email, hashedPassword]);
 
         const jwtSecret = process.env.JWT_SECRET || "default_secret_key";
@@ -44,7 +45,12 @@ const signupHandler = async (req, res, dbConnection) => {
         console.error("Signup error:", error);
 
         res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ message: "Error during signup", error: error.message }));
+        res.end(
+          JSON.stringify({
+            message: "Error during signup",
+            error: error.message,
+          })
+        );
       }
     });
   } else {

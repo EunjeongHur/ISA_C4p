@@ -11,9 +11,18 @@ const startServer = async () => {
     const dbConnection = await connectDB();
 
     const requestHandler = (req, res) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization"
+      );
+
+      if (req.method === "OPTIONS") {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
 
       if (req.method === "POST" && req.url === "/api/v1/signup") {
         signupHandler(req, res, dbConnection);
@@ -30,9 +39,8 @@ const startServer = async () => {
     const server = http.createServer(requestHandler);
 
     server.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
+      console.log(`Server is running on http://localhost:${port}`);
     });
-
   } catch (error) {
     console.error("Failed to start server:", error);
   }
