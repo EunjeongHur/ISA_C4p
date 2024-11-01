@@ -11,12 +11,15 @@ const startServer = async () => {
     const dbConnection = await connectDB();
 
     const requestHandler = (req, res) => {
-      signupHandler(req, res, dbConnection);
-      loginHandler(req, res);
-
-      if (res.writableEnded === false) {
-        res.writeHead(404, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ message: "Route not found." }));
+      if (req.method === "POST" && req.url === "/api/v1/signup") {
+        signupHandler(req, res, dbConnection);
+      } else if (req.method === "POST" && req.url === "/api/v1/login") {
+        loginHandler(req, res, dbConnection);
+      } else {
+        if (!res.writableEnded) {
+          res.writeHead(404, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ message: "Route not found." }));
+        }
       }
     };
 
