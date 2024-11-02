@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+    app:
+        build:
+            context: .
+        environment:
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT}
+            DB_USER: ${DB_USER}
+            DB_PASS: ${DB_PASS}
+            DB_NAME: ${DB_NAME}
+            HUGGINGFACE_API_KEY: ${HUGGING_FACE_API_KEY}
+        ports:
+            - "3000:3000"
+        volumes:
+            - .:/app
