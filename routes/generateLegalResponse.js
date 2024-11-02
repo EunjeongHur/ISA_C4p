@@ -23,7 +23,7 @@ const generateLegalResponseHandler = async (req, res) => {
 
 			// Send the model's response back to the client
 			res.writeHead(200, { "Content-Type": "application/json" });
-			res.end(JSON.stringify({ response: result.generated_text }));
+			return res.end(JSON.stringify({ response: result.generated_text }));
 		});
 	} catch (error) {
 		console.error("Error generating response:", error);
