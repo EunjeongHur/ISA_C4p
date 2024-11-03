@@ -8,6 +8,7 @@ const requestCountHandler = require("./routes/requestCount");
 const getUsersHandler = require("./routes/getUsers");
 const checkRoleHandler = require("./routes/checkRole");
 const generateLegalResponseHandler = require("./routes/generateLegalResponse");
+const summarizeTextHandler = require("./routes/summarizeText");
 
 const port = process.env.PORT || 3000;
 
@@ -51,11 +52,16 @@ const startServer = async () => {
 				req.url === "/api/v1/check-role"
 			) {
 				checkRoleHandler(req, res);
-			} else if (
+			} // else if (
+			// 	req.method === "POST" &&
+			// 	req.url === "/api/v1/generateLegalResponse"
+			// ) {
+			// 	generateLegalResponseHandler(req, res);}
+			else if (
 				req.method === "POST" &&
-				req.url === "/api/v1/generateLegalResponse"
+				req.url === "/api/v1/summarizeText"
 			) {
-				generateLegalResponseHandler(req, res);
+				summarizeTextHandler(req, res);
 			} else {
 				if (!res.writableEnded) {
 					res.writeHead(404, { "Content-Type": "application/json" });
