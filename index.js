@@ -11,11 +11,14 @@ const checkRoleHandler = require("./routes/checkRole");
 
 const port = process.env.PORT || 3000;
 
+// Replace with your actual AI service URL on Render
+const aiServiceUrl = "https://isa-c4p-ai-service.onrender.com";
+
 const startServer = async () => {
 	try {
 		const dbConnection = await connectDB();
 
-		const requestHandler = (req, res) => {
+		const requestHandler = async (req, res) => {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 			res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 			res.setHeader(
@@ -29,69 +32,46 @@ const startServer = async () => {
 				return;
 			}
 
-			if (req.method === "POST" && req.url === "/api/v1/signup") {
-				signupHandler(req, res, dbConnection);
-			} else if (req.method === "POST" && req.url === "/api/v1/login") {
-				loginHandler(req, res, dbConnection);
-			} else if (req.method === "GET" && req.url === "/api/v1/verify-token") {
-				verifyTokenHandler(req, res);
-			} else if (
-				(req.method === "GET" && req.url === "/api/v1/request-count") ||
-				(req.method === "POST" && req.url === "/api/v1/increment-request-count")
-			) {
-				requestCountHandler(req, res, dbConnection);
-			} else if (req.method === "GET" && req.url === "/api/v1/users") {
-				getUsersHandler(req, res, dbConnection);
-			} else if (req.method === "GET" && req.url === "/api/v1/check-role") {
-				checkRoleHandler(req, res);
-			} else if (req.method === "POST" && req.url === "/api/v1/generate-legal-response") {
-				let body = "";
-				req.on("data", (chunk) => {
-					body += chunk.toString();
-				});
+			let body = "";
+			req.on("data", (chunk) => {
+				body += chunk.toString();
+			});
 
-				req.on("end", async () => {
-					try {
-						const { input } = JSON.parse(body);
-						const aiResponse = await axios.post(
-							"https://isa-c4p-ai-service.onrender.com/generate-legal-response",
-							{ input }
-						);
-						res.writeHead(200, { "Content-Type": "application/json" });
-						res.end(JSON.stringify({ response: aiResponse.data.response }));
-					} catch (error) {
-						console.error("Error calling AI service:", error);
-						res.writeHead(500, { "Content-Type": "application/json" });
-						res.end(JSON.stringify({ error: "Failed to generate response" }));
-					}
-				});
-			} else if (req.method === "POST" && req.url === "/api/v1/summarize-text") {
-				let body = "";
-				req.on("data", (chunk) => {
-					body += chunk.toString();
-				});
+			req.on("end", async () => {
+				try {
+					const parsedBody = body ? JSON.parse(body) : {};
 
-				req.on("end", async () => {
-					try {
-						const { input } = JSON.parse(body);
-						const aiResponse = await axios.post(
-							"https://isa-c4p-ai-service.onrender.com/summarize-text",
-							{ input }
-						);
-						res.writeHead(200, { "Content-Type": "application/json" });
-						res.end(JSON.stringify({ summary: aiResponse.data.summary }));
-					} catch (error) {
-						console.error("Error calling AI service:", error);
-						res.writeHead(500, { "Content-Type": "application/json" });
-						res.end(JSON.stringify({ error: "Failed to generate summary" }));
+					if (req.method === "POST" && req.url === "/api/v1/signup") {
+						signupHandler(req, res, dbConnection);
+					} else if (req.method === "POST" && req.url === "/api/v1/login") {
+						loginHandler(req, res, dbConnection);
+					} else if (req.method === "GET" && req.url === "/api/v1/verify-token") {
+						verifyTokenHandler(req, res);
+					} else if (
+						(req.method === "GET" && req.url === "/api/v1/request-count") ||
+						(req.method === "POST" &&
+							req.url === "/api/v1/increment-request-count")
+					) {
+						requestCountHandler(req, res, dbConnection);
+					} else if (req.method === "GET" && req.url === "/api/v1/users") {
+						getUsersHandler(req, res, dbConnection);
+					} else if (req.method === "GET" && req.url === "/api/v1/check-role") {
+						checkRoleHandler(req, res);
+					} else if (
+						req.method === "POST" &&
+						req.url === "/api/v1/summarize-text"
+					) {
+						await handleAIRequest(req, res, parsedBody);
+					} else {
+						res.writeHead(404, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({ message: "Route not found." }));
 					}
-				});
-			} else {
-				if (!res.writableEnded) {
-					res.writeHead(404, { "Content-Type": "application/json" });
-					res.end(JSON.stringify({ message: "Route not found." }));
+				} catch (error) {
+					console.error("Request handling error:", error);
+					res.writeHead(500, { "Content-Type": "application/json" });
+					res.end(JSON.stringify({ error: "Internal Server Error" }));
 				}
-			}
+			});
 		};
 
 		const server = http.createServer(requestHandler);
@@ -101,6 +81,20 @@ const startServer = async () => {
 		});
 	} catch (error) {
 		console.error("Failed to start server:", error);
+	}
+};
+
+const handleAIRequest = async (req, res, body) => {
+	try {
+		const { text } = body;
+		const aiResponse = await axios.post(`${aiServiceUrl}/process-text`, { text });
+
+		res.writeHead(200, { "Content-Type": "application/json" });
+		res.end(JSON.stringify({ summary: aiResponse.data.summary }));
+	} catch (error) {
+		console.error("Error calling AI service:", error);
+		res.writeHead(500, { "Content-Type": "application/json" });
+		res.end(JSON.stringify({ error: "Failed to process the request" }));
 	}
 };
 
