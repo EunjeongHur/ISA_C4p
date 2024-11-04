@@ -1,5 +1,6 @@
 const http = require("http");
 const connectDB = require("./db");
+const axios = require("axios");
 
 const signupHandler = require("./routes/signup");
 const loginHandler = require("./routes/login");
@@ -7,8 +8,6 @@ const verifyTokenHandler = require("./routes/verifyToken");
 const requestCountHandler = require("./routes/requestCount");
 const getUsersHandler = require("./routes/getUsers");
 const checkRoleHandler = require("./routes/checkRole");
-const generateLegalResponseHandler = require("./routes/generateLegalResponse");
-const summarizeTextHandler = require("./routes/summarizeText");
 
 const port = process.env.PORT || 3000;
 
@@ -34,34 +33,59 @@ const startServer = async () => {
 				signupHandler(req, res, dbConnection);
 			} else if (req.method === "POST" && req.url === "/api/v1/login") {
 				loginHandler(req, res, dbConnection);
-			} else if (
-				req.method === "GET" &&
-				req.url === "/api/v1/verify-token"
-			) {
+			} else if (req.method === "GET" && req.url === "/api/v1/verify-token") {
 				verifyTokenHandler(req, res);
 			} else if (
 				(req.method === "GET" && req.url === "/api/v1/request-count") ||
-				(req.method === "POST" &&
-					req.url === "/api/v1/increment-request-count")
+				(req.method === "POST" && req.url === "/api/v1/increment-request-count")
 			) {
 				requestCountHandler(req, res, dbConnection);
 			} else if (req.method === "GET" && req.url === "/api/v1/users") {
 				getUsersHandler(req, res, dbConnection);
-			} else if (
-				req.method === "GET" &&
-				req.url === "/api/v1/check-role"
-			) {
+			} else if (req.method === "GET" && req.url === "/api/v1/check-role") {
 				checkRoleHandler(req, res);
-			} // else if (
-			// 	req.method === "POST" &&
-			// 	req.url === "/api/v1/generateLegalResponse"
-			// ) {
-			// 	generateLegalResponseHandler(req, res);}
-			else if (
-				req.method === "POST" &&
-				req.url === "/api/v1/summarizeText"
-			) {
-				summarizeTextHandler(req, res);
+			} else if (req.method === "POST" && req.url === "/api/v1/generate-legal-response") {
+				let body = "";
+				req.on("data", (chunk) => {
+					body += chunk.toString();
+				});
+
+				req.on("end", async () => {
+					try {
+						const { input } = JSON.parse(body);
+						const aiResponse = await axios.post(
+							"https://isa-c4p-ai-service.onrender.com/generate-legal-response",
+							{ input }
+						);
+						res.writeHead(200, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({ response: aiResponse.data.response }));
+					} catch (error) {
+						console.error("Error calling AI service:", error);
+						res.writeHead(500, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({ error: "Failed to generate response" }));
+					}
+				});
+			} else if (req.method === "POST" && req.url === "/api/v1/summarize-text") {
+				let body = "";
+				req.on("data", (chunk) => {
+					body += chunk.toString();
+				});
+
+				req.on("end", async () => {
+					try {
+						const { input } = JSON.parse(body);
+						const aiResponse = await axios.post(
+							"https://isa-c4p-ai-service.onrender.com/summarize-text",
+							{ input }
+						);
+						res.writeHead(200, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({ summary: aiResponse.data.summary }));
+					} catch (error) {
+						console.error("Error calling AI service:", error);
+						res.writeHead(500, { "Content-Type": "application/json" });
+						res.end(JSON.stringify({ error: "Failed to generate summary" }));
+					}
+				});
 			} else {
 				if (!res.writableEnded) {
 					res.writeHead(404, { "Content-Type": "application/json" });
