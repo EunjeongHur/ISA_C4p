@@ -11,6 +11,7 @@ const hashPassword = (password, salt) => {
 };
 
 const loginHandler = async (req, res, dbConnection) => {
+  console.log("inside login handler");
   if (req.method === "POST" && req.url === "/api/v1/login") {
     let body = "";
 
@@ -30,6 +31,7 @@ const loginHandler = async (req, res, dbConnection) => {
 
         // Step 2: Check if user exists in the database and retrieve user_type
         const selectQuery = "SELECT * FROM user WHERE email = ?";
+        console.log("sending request to db");
         const [user] = await dbConnection.execute(selectQuery, [email]);
 
         if (!user || user.length === 0) {
@@ -59,6 +61,7 @@ const loginHandler = async (req, res, dbConnection) => {
         const token = jwt.sign({ email, role }, jwtSecret, { expiresIn: "1h" });
 
         // Step 5: Send success response with token
+        console.log("sending success response");
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ message: "Login successful", token }));
       } catch (error) {
