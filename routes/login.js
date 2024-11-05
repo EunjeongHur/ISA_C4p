@@ -14,7 +14,7 @@ const loginHandler = async (req, res, dbConnection) => {
   console.log("Inside login handler");
   console.log("Request Method:", req.method, "Request URL:", req.url);
 
-  if (req.method === "POST" && req.url === "/api/v1/login") {
+  if (req.method == "POST" && req.url == "/api/v1/login") {
     let body = "";
 
     req.on("data", (chunk) => {
