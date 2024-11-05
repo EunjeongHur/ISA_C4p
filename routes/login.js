@@ -12,6 +12,7 @@ const hashPassword = (password, salt) => {
 
 const loginHandler = async (req, res, dbConnection) => {
   console.log("inside login handler");
+  console.log(req.method, req.url);
   if (req.method === "POST" && req.url === "/api/v1/login") {
     let body = "";
 
