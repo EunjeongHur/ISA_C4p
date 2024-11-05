@@ -11,6 +11,18 @@ const hashPassword = (password, salt) => {
 };
 
 const loginHandler = async (req, res, dbConnection) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // Handle OPTIONS preflight request
+  if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   console.log("Inside login handler");
   console.log("Request Method:", req.method, "Request URL:", req.url);
 
