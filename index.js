@@ -39,15 +39,6 @@ const startServer = async () => {
 				return;
 			}
 
-			let body = "";
-			req.on("data", (chunk) => {
-				body += chunk.toString();
-			});
-
-			req.on("end", async () => {
-				try {
-					console.log("Request body received:", body);
-					const parsedBody = body ? JSON.parse(body) : {};
 
 					if (req.method === "POST" && req.url === "/api/v1/signup") {
 						console.log("Handling signup request");
