@@ -11,8 +11,9 @@ const hashPassword = (password, salt) => {
 };
 
 const loginHandler = async (req, res, dbConnection) => {
-  console.log("inside login handler");
-  console.log(req.method, req.url);
+  console.log("Inside login handler");
+  console.log("Request Method:", req.method, "Request URL:", req.url);
+
   if (req.method === "POST" && req.url === "/api/v1/login") {
     let body = "";
 
@@ -22,36 +23,40 @@ const loginHandler = async (req, res, dbConnection) => {
 
     req.on("end", async () => {
       try {
+        console.log("Received body:", body);
         const { email, password } = JSON.parse(body);
 
         // Step 1: Validate email format
         if (!validateEmail(email)) {
           res.writeHead(400, { "Content-Type": "application/json" });
+          console.log("Invalid email format:", email);
           return res.end(JSON.stringify({ message: "Invalid email format" }));
         }
 
         // Step 2: Check if user exists in the database and retrieve user_type
         const selectQuery = "SELECT * FROM user WHERE email = ?";
-        console.log("sending request to db");
+        console.log("Querying database with email:", email);
         const [user] = await dbConnection.execute(selectQuery, [email]);
 
         if (!user || user.length === 0) {
           res.writeHead(401, { "Content-Type": "application/json" });
+          console.log("User not found or incorrect password for email:", email);
           return res.end(
             JSON.stringify({ message: "Invalid email or password" })
           );
         }
 
-        const dbUser = user[0]; // Assuming user exists and is the first item
+        const dbUser = user[0];
         const storedHashedPassword = dbUser.hashed_password;
-        const userType = dbUser.user_type_id; // Retrieve user_type from the database
-        const role = userType === 1 ? "admin" : "user"; // Map user_type to role
-        const salt = process.env.SALT_ROUNDS; // Assuming you’re using a static salt
+        const userType = dbUser.user_type_id;
+        const role = userType === 1 ? "admin" : "user";
+        const salt = process.env.SALT_ROUNDS;
         const hashedPassword = hashPassword(password, salt);
 
         // Step 3: Compare passwords
         if (hashedPassword !== storedHashedPassword) {
           res.writeHead(401, { "Content-Type": "application/json" });
+          console.log("Password mismatch for email:", email);
           return res.end(
             JSON.stringify({ message: "Invalid email or password" })
           );
@@ -60,9 +65,10 @@ const loginHandler = async (req, res, dbConnection) => {
         // Step 4: Generate JWT token with role included
         const jwtSecret = process.env.JWT_SECRET || "default_secret_key";
         const token = jwt.sign({ email, role }, jwtSecret, { expiresIn: "1h" });
+        console.log("JWT token created:", token);
 
         // Step 5: Send success response with token
-        console.log("sending success response");
+        console.log("Sending success response with token for email:", email);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ message: "Login successful", token }));
       } catch (error) {
@@ -77,6 +83,7 @@ const loginHandler = async (req, res, dbConnection) => {
       }
     });
   } else {
+    console.log("Route not matched:", req.method, req.url);
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ message: "Route not found" }));
   }
